@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d2730" />
+  <title>Midnight Falafel Counter</title>
+  <style>
+    :root {
+      --ink:#102b33;
+      --night:#0d2730;
+      --teal:#1d6c74;
+      --mint:#aee9cc;
+      --cream:#fff3d4;
+      --paper:#f8e2ae;
+      --tomato:#eb5a45;
+      --gold:#f7bd54;
+      --olive:#697345;
+      --danger:#cf3f4a;
+      --shadow:0 18px 42px rgba(7, 24, 29, .26);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 10% 5%, rgba(247,189,84,.28), transparent 19rem),
+        radial-gradient(circle at 95% 90%, rgba(235,90,69,.18), transparent 19rem),
+        #0b2027;
+      color:var(--ink);
+      font-family: ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+      padding:24px 16px 38px;
+    }
+    button { font:inherit; cursor:pointer; }
+    .shell { width:min(1180px, 100%); margin:0 auto; }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between; gap:18px;
+      color:var(--cream); margin-bottom:18px;
+    }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo {
+      width:54px; height:54px; display:grid; place-items:center; border:2px solid var(--gold);
+      border-radius:17px 17px 17px 4px; background:var(--tomato); box-shadow:4px 4px 0 #823432;
+      font-size:28px; transform:rotate(-4deg);
+    }
+    .brand h1 { margin:0; line-height:.95; font-family:Georgia, serif; letter-spacing:.02em; font-size:clamp(1.25rem, 3vw, 2rem); }
+    .brand small { color:var(--mint); letter-spacing:.1em; font-weight:700; text-transform:uppercase; font-size:.67rem; }
+    .creator-chip {
+      display:flex; align-items:center; gap:9px; padding:7px 12px 7px 7px; min-width:194px;
+      background:rgba(255,243,212,.1); border:1px solid rgba(255,243,212,.28); border-radius:999px;
+      color:var(--cream); text-decoration:none; transition:.2s transform, .2s background;
+    }
+    .creator-chip:hover { transform:translateY(-2px); background:rgba(255,243,212,.18); }
+    .creator-chip img { width:34px; height:34px; border-radius:50%; object-fit:cover; border:2px solid var(--gold); }
+    .creator-chip strong { display:block; font-size:.84rem; }
+    .creator-chip span { display:block; color:var(--mint); font-size:.7rem; }
+
+    .game-frame {
+      overflow:hidden; border:4px solid #e5b36e; border-radius:28px;
+      box-shadow:var(--shadow); background:var(--cream);
+    }
+    .score-strip {
+      display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:#cc8f51;
+      color:var(--cream);
+    }
+    .metric { min-height:76px; display:grid; place-content:center; text-align:center; background:var(--night); padding:8px; }
+    .metric span { display:block; color:var(--mint); text-transform:uppercase; letter-spacing:.11em; font-size:.63rem; font-weight:800; }
+    .metric strong { display:block; font-size:1.35rem; margin-top:3px; }
+    .metric strong.danger { color:#ff8580; }
+    .metric strong.good { color:var(--gold); }
+
+    .counter { min-height:590px; padding:clamp(16px, 2.4vw, 30px); position:relative; overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(20,86,91,.95) 0 44%, #e6bf77 44% 46%, #bd6d40 46% 100%);
+    }
+    .counter:before, .counter:after { content:""; position:absolute; z-index:0; opacity:.24; pointer-events:none; }
+    .counter:before { width:320px; height:320px; border:32px dotted var(--mint); border-radius:50%; left:-145px; top:-180px; }
+    .counter:after { width:300px; height:300px; border:30px dotted #f8db96; border-radius:50%; right:-150px; bottom:-170px; }
+    .counter > * { position:relative; z-index:1; }
+    .counter-head { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; margin-bottom:18px; }
+    .neon { color:var(--cream); font-family:Georgia,serif; font-size:clamp(1.25rem, 2.6vw, 2rem); text-shadow:0 3px 0 #8b3d31; margin:0; }
+    .neon small { display:block; font:700 .7rem ui-rounded, system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); margin-top:5px; text-shadow:none; }
+    .how-button { color:var(--cream); background:transparent; border:1px solid rgba(255,243,212,.7); border-radius:999px; padding:9px 13px; font-size:.8rem; font-weight:800; }
+    .how-button:hover { background:rgba(255,255,255,.14); }
+
+    .stations { display:grid; grid-template-columns:1.03fr 1.18fr .98fr; gap:18px; align-items:stretch; }
+    .panel { border:3px solid rgba(16,43,51,.88); box-shadow:5px 6px 0 rgba(9,28,32,.35); border-radius:17px; overflow:hidden; }
+    .panel-label { margin:0; padding:9px 13px; background:var(--night); color:var(--cream); font-size:.75rem; letter-spacing:.11em; text-transform:uppercase; }
+    .customer-panel { background:#f4d691; display:flex; flex-direction:column; }
+    .customer-stage { min-height:295px; padding:20px 15px 13px; background:linear-gradient(160deg, #e8c67f, #f9e7b9); position:relative; }
+    .customer-stage:after { content:""; position:absolute; height:13px; left:0; right:0; bottom:0; background:repeating-linear-gradient(90deg, #b1643e 0 32px, #d1874d 32px 64px); }
+    .customer { height:205px; position:relative; width:180px; margin:auto; transition:transform .25s ease; }
+    .customer.leaving { transform:translateX(-210px); }
+    .head { position:absolute; top:15px; left:48px; width:90px; height:96px; border:3px solid var(--ink); border-radius:44% 48% 44% 42%; background:var(--skin, #a86e4c); }
+    .hair { position:absolute; top:2px; left:36px; width:114px; height:62px; border:3px solid var(--ink); border-radius:58px 58px 23px 23px; background:var(--hair, #472e23); }
+    .eye { position:absolute; top:48px; width:13px; height:16px; background:var(--ink); border-radius:50%; }
+    .eye.left { left:26px; } .eye.right { right:26px; }
+    .mouth { position:absolute; left:33px; top:74px; width:28px; height:12px; border-bottom:3px solid var(--ink); border-radius:50%; }
+    .body { position:absolute; top:104px; left:28px; width:132px; height:102px; border:3px solid var(--ink); border-radius:44px 44px 10px 10px; background:var(--shirt, #eb5a45); }
+    .apron { position:absolute; left:19px; top:22px; width:87px; height:77px; border:3px solid var(--ink); border-radius:7px 7px 0 0; background:#fff3d4; }
+    .order-bubble { position:absolute; width:calc(100% - 20px); right:10px; top:12px; padding:12px 13px; border:2px solid var(--ink); background:#fffbe9; border-radius:15px 15px 3px 15px; font-weight:800; font-size:.78rem; line-height:1.5; box-shadow:3px 4px 0 rgba(16,43,51,.26); }
+    .order-bubble:after { content:""; position:absolute; right:15px; bottom:-11px; width:18px; height:18px; background:#fffbe9; border-right:2px solid var(--ink); border-bottom:2px solid var(--ink); transform:rotate(45deg); }
+    .patience { padding:13px 15px 15px; }
+    .patience p { margin:0 0 7px; display:flex; justify-content:space-between; font-weight:900; font-size:.75rem; }
+    .patience-track { height:10px; border:2px solid var(--ink); background:#fff3d4; border-radius:9px; overflow:hidden; }
+    #patienceFill { width:100%; height:100%; background:linear-gradient(90deg, var(--tomato), var(--gold), var(--mint)); transition:width .4s linear; }
+
+    .build-panel { background:#f5dfa7; display:flex; flex-direction:column; }
+    .tray { flex:1; min-height:187px; padding:18px; display:grid; place-items:center; position:relative; }
+    .tray-ring { width:min(260px, 90%); aspect-ratio:1.3; border-radius:50%; border:8px solid #eee8ce; background:#6e7d53; box-shadow:inset 0 0 0 5px #334632, 0 8px 0 #304431; display:grid; place-items:center; position:relative; }
+    .tray-ring:before { content:""; position:absolute; inset:15px; border-radius:50%; border:3px dashed rgba(255,243,212,.5); }
+    .wrap { width:150px; height:91px; border:3px solid var(--ink); border-radius:22px 22px 42px 42px; background:#e8c46f; transform:rotate(-2deg); overflow:hidden; box-shadow:inset 0 -14px 0 rgba(145,93,49,.16); position:relative; }
+    .wrap:before { content:""; position:absolute; top:0; left:13px; right:13px; height:28px; border-bottom:3px dashed var(--ink); }
+    #trayContents { position:absolute; top:31px; left:16px; right:16px; min-height:42px; display:flex; flex-wrap:wrap; gap:4px; align-content:flex-start; justify-content:center; }
+    .mini { width:19px; height:19px; border:2px solid var(--ink); display:inline-block; }
+    .mini.hummus { background:#f5db83; border-radius:50%; }
+    .mini.falafel { background:#75452d; border-radius:50%; }
+    .mini.salad { background:#71a75e; transform:rotate(22deg); }
+    .mini.heat { background:#e95d43; border-radius:8px 8px 8px 0; }
+    .mini.fries { background:#ffc950; width:8px; height:22px; transform:rotate(14deg); }
+    .mini.tea { background:#d37f42; border-radius:2px 2px 8px 8px; }
+    .empty-note { position:absolute; top:48%; color:#385047; font-size:.75rem; font-weight:800; transform:rotate(-3deg); }
+    .serve-button { border:0; border-top:3px solid var(--ink); padding:16px; color:var(--cream); background:var(--tomato); font-weight:1000; font-size:1rem; letter-spacing:.08em; text-transform:uppercase; transition:transform .12s, filter .12s; }
+    .serve-button:hover { filter:brightness(1.08); }
+    .serve-button:active { transform:translateY(3px); }
+
+    .ingredients { background:#f5dfa7; }
+    .ingredient-grid { padding:11px; display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+    .ingredient {
+      min-height:77px; border:2px solid var(--ink); border-radius:12px; background:#fff4d6; color:var(--ink); padding:8px; font-weight:900; text-align:left; display:flex; gap:8px; align-items:center; transition:.16s transform,.16s background,.16s box-shadow;
+    }
+    .ingredient:hover { transform:translateY(-2px); box-shadow:2px 3px 0 rgba(16,43,51,.35); }
+    .ingredient.selected { background:var(--mint); box-shadow:inset 0 0 0 3px var(--teal); }
+    .food-icon { width:31px; height:31px; display:grid; place-items:center; flex:none; border-radius:50%; background:#f7bd54; border:2px solid var(--ink); font-size:17px; }
+    .ingredient span { display:block; font-size:.65rem; color:#486068; margin-top:2px; }
+    .ingredient.counter-selected .food-icon { background:var(--tomato); color:#fff; }
+    .reset { margin:0 11px 11px; border:2px dashed var(--ink); color:var(--ink); background:transparent; border-radius:10px; padding:8px; font-size:.7rem; font-weight:900; }
+
+    .cat-alert { display:none; position:absolute; z-index:8; right:4%; bottom:21px; max-width:235px; border:3px solid var(--ink); background:#fff3d4; border-radius:16px; padding:12px; box-shadow:5px 5px 0 rgba(16,43,51,.35); animation:pop .25s ease-out; }
+    .cat-alert.show { display:flex; align-items:center; gap:9px; }
+    .cat-alert .cat { font-size:32px; }
+    .cat-alert strong { display:block; font-size:.84rem; }
+    .cat-alert button { border:2px solid var(--ink); background:var(--gold); border-radius:9px; padding:7px 8px; font-size:.72rem; font-weight:900; white-space:nowrap; }
+    @keyframes pop { from { transform:scale(.5) rotate(-8deg); opacity:0; } to { transform:scale(1) rotate(0); opacity:1; } }
+    .toast { position:fixed; top:18px; left:50%; transform:translate(-50%,-150%); z-index:30; background:var(--night); color:var(--cream); padding:12px 18px; border:2px solid var(--gold); border-radius:999px; box-shadow:var(--shadow); font-weight:800; transition:.25s transform; max-width:calc(100vw - 28px); text-align:center; }
+    .toast.show { transform:translate(-50%,0); }
+    .modal-backdrop { display:none; position:fixed; z-index:20; inset:0; padding:18px; background:rgba(5,19,24,.75); place-items:center; }
+    .modal-backdrop.show { display:grid; }
+    .modal { width:min(550px, 100%); background:var(--cream); border:4px solid var(--gold); border-radius:22px; padding:25px; box-shadow:var(--shadow); }
+    .modal h2 { margin:0 0 10px; font-family:Georgia,serif; color:var(--night); }
+    .modal p { line-height:1.55; font-size:.92rem; }
+    .modal button { width:100%; margin-top:9px; border:0; border-radius:12px; padding:12px; color:var(--cream); background:var(--teal); font-weight:900; }
+    .modal .result { font-size:1.25rem; font-weight:1000; color:var(--tomato); }
+    .footer-note { color:rgba(255,243,212,.78); text-align:center; margin:15px auto 0; font-size:.73rem; line-height:1.55; max-width:890px; }
+    .footer-note a { color:var(--mint); }
+    .footer-note strong { color:var(--cream); }
+    @media (max-width:850px) { .stations { grid-template-columns:1fr 1fr; } .build-panel { grid-column:span 2; order:-1; } .tray { min-height:150px; } }
+    @media (max-width:560px) { body { padding:13px 9px 28px; } .topbar { align-items:flex-start; } .creator-chip { min-width:0; padding-right:7px; } .creator-chip .chip-text { display:none; } .score-strip { grid-template-columns:repeat(2, 1fr); } .stations { grid-template-columns:1fr; } .build-panel { grid-column:auto; } .counter { padding:14px; } .counter-head { gap:8px; } .ingredient-grid { grid-template-columns:repeat(3,1fr); } .ingredient { min-height:63px; padding:6px; justify-content:center; } .ingredient .label { display:none; } .food-icon { width:35px; height:35px; } }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">☾</div>
+        <div><h1>Midnight Falafel Counter</h1><small>Original browser game · night shift 01</small></div>
+      </div>
+      <a class="creator-chip" href="https://www.tiktok.com/@lm.vivi" target="_blank" rel="noopener noreferrer" aria-label="Created for TikTok user lm.vivi">
+        <img src="assets/lm-vivi-profile.jpeg" alt="Public TikTok profile picture for lm.vivi" />
+        <span class="chip-text"><strong>Created for @lm.vivi</strong><span>TikTok profile ↗</span></span>
+      </a>
+    </header>
+
+    <section class="game-frame" aria-label="Midnight Falafel Counter game">
+      <div class="score-strip">
+        <div class="metric"><span>Cash drawer</span><strong class="good" id="cash">$0</strong></div>
+        <div class="metric"><span>Tonight's goal</span><strong id="goal">$620</strong></div>
+        <div class="metric"><span>Shift timer</span><strong id="timer">01:30</strong></div>
+        <div class="metric"><span>Streak</span><strong id="streak">×0</strong></div>
+      </div>
+      <section class="counter">
+        <div class="counter-head">
+          <h2 class="neon">The corner window is open.<small>Match the ticket. Build the wrap. Make the night.</small></h2>
+          <button class="how-button" id="howButton" type="button">How to play</button>
+        </div>
+        <div class="stations">
+          <section class="panel customer-panel" aria-label="Current customer order">
+            <h3 class="panel-label">01 · ticket window</h3>
+            <div class="customer-stage">
+              <div class="order-bubble" id="orderBubble">Loading order…</div>
+              <div class="customer" id="customer">
+                <div class="hair"></div><div class="head"><i class="eye left"></i><i class="eye right"></i><i class="mouth"></i></div>
+                <div class="body"><div class="apron"></div></div>
+              </div>
+            </div>
+            <div class="patience"><p><span>Customer patience</span><span id="patienceText">100%</span></p><div class="patience-track"><div id="patienceFill"></div></div></div>
+          </section>
+
+          <section class="panel build-panel" aria-label="Your falafel wrap tray">
+            <h3 class="panel-label">02 · tray</h3>
+            <div class="tray"><div class="tray-ring"><div class="wrap"><div id="trayContents"></div></div><span class="empty-note" id="emptyNote">Add ingredients</span></div></div>
+            <button class="serve-button" id="serveButton" type="button">Serve the ticket</button>
+          </section>
+
+          <section class="panel ingredients" aria-label="Ingredient station">
+            <h3 class="panel-label">03 · build order</h3>
+            <div class="ingredient-grid" id="ingredientGrid">
+              <button class="ingredient" data-item="hummus" type="button"><b class="food-icon">●</b><span class="label">Hummus<span>one scoop</span></span></button>
+              <button class="ingredient counter-selected" data-item="falafel" type="button"><b class="food-icon">●</b><span class="label">Falafel<span id="falafelCount">0 pieces</span></span></button>
+              <button class="ingredient" data-item="salad" type="button"><b class="food-icon">✦</b><span class="label">Herb salad<span>fresh cut</span></span></button>
+              <button class="ingredient" data-item="heat" type="button"><b class="food-icon">♨</b><span class="label">Chili<span>hot touch</span></span></button>
+              <button class="ingredient counter-selected" data-item="fries" type="button"><b class="food-icon">≡</b><span class="label">Fries<span id="friesCount">0 sticks</span></span></button>
+              <button class="ingredient" data-item="tea" type="button"><b class="food-icon">◒</b><span class="label">Mint tea<span>cup on side</span></span></button>
+            </div>
+            <button class="reset" id="resetButton" type="button">Clear tray</button>
+          </section>
+        </div>
+        <aside class="cat-alert" id="catAlert" aria-live="assertive"><span class="cat" aria-hidden="true">🐈</span><span><strong>Street cat spotted!</strong>Tap before it steals your fries.</span><button id="shooButton" type="button">Shoo!</button></aside>
+      </section>
+    </section>
+    <p class="footer-note"><strong>Original game concept and browser implementation.</strong> It takes only the broad restaurant time-management premise from public descriptions of <em>Falafel King</em>. The reference game is credited to <strong>Patates Games / Eyad Alshafei</strong>, whose studio says it is a solo drawing, coding and development effort. This page is <strong>created for @lm.vivi</strong>; the public TikTok profile image is linked above.</p>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h2 id="modalTitle">Serve the midnight crowd</h2>
+      <p id="modalCopy">Read each customer ticket, tap ingredients to build exactly that order, then press <strong>Serve the ticket</strong>. Correct orders earn cash and build a streak. A wrong wrap costs patience; a customer who leaves costs the shift. Reach $620 before the 90-second clock runs out. If the street cat appears, press <strong>Shoo!</strong> quickly to protect your fries.</p>
+      <button id="modalButton" type="button">Start shift</button>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const $ = (selector) => document.querySelector(selector);
+      const state = {
+        cash: 0, streak: 0, time: 90, patience: 100, playing: false, ended: false,
+        order: null, build: { hummus:false, falafel:0, salad:false, heat:false, fries:0, tea:false },
+        customerIndex: 0, catTimer: null, clock: null
+      };
+      const menu = ['hummus','falafel','salad','heat','fries','tea'];
+      const customerLooks = [
+        ['#b97954','#39241d','#5d8ea7'], ['#d8a181','#7e4a2a','#e8a44d'], ['#875237','#1c2638','#657b49'], ['#e0b28b','#6d2732','#9d5b9d'], ['#6b4430','#131f2a','#d96749']
+      ];
+      const title = { hummus:'hummus', falafel:'falafel', salad:'herb salad', heat:'chili', fries:'fries', tea:'mint tea' };
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+      function makeOrder() {
+        const mandatory = { hummus: Math.random() > .32, salad: Math.random() > .38, heat: Math.random() > .58, tea: Math.random() > .48 };
+        let o = { ...mandatory, falafel: 2 + Math.floor(Math.random()*3), fries: 3 + Math.floor(Math.random()*3) };
+        if (!o.hummus && !o.salad && !o.heat) o.hummus = true;
+        return o;
+      }
+      function ticketText(order) {
+        const bits = [];
+        if (order.hummus) bits.push('hummus');
+        bits.push(plural(order.falafel, 'falafel'));
+        if (order.salad) bits.push('salad');
+        if (order.heat) bits.push('chili');
+        bits.push(`${order.fries} fries`);
+        if (order.tea) bits.push('mint tea');
+        return `“I need ${bits.join(', ')}.”`;
+      }
+      function resetBuild() { state.build = { hummus:false, falafel:0, salad:false, heat:false, fries:0, tea:false }; updateTray(); }
+      function updateTray() {
+        const tray = $('#trayContents'); tray.innerHTML = '';
+        for (const item of menu) {
+          const count = typeof state.build[item] === 'number' ? state.build[item] : (state.build[item] ? 1 : 0);
+          for (let i=0;i<count;i++) { const piece = document.createElement('i'); piece.className = `mini ${item}`; tray.append(piece); }
+        }
+        $('#emptyNote').style.display = tray.children.length ? 'none' : 'block';
+        $('#falafelCount').textContent = plural(state.build.falafel, 'piece');
+        $('#friesCount').textContent = plural(state.build.fries, 'stick');
+        document.querySelectorAll('.ingredient').forEach(b => {
+          const item = b.dataset.item;
+          const active = typeof state.build[item] === 'number' ? state.build[item] > 0 : state.build[item];
+          b.classList.toggle('selected', active);
+        });
+      }
+      function updateHud() {
+        $('#cash').textContent = `$${state.cash}`;
+        $('#streak').textContent = `×${state.streak}`;
+        const min = Math.floor(state.time/60).toString().padStart(2,'0'); const sec = (state.time%60).toString().padStart(2,'0');
+        $('#timer').textContent = `${min}:${sec}`;
+        $('#timer').className = state.time <= 15 ? 'danger' : '';
+        $('#patienceFill').style.width = `${Math.max(0,state.patience)}%`;
+        $('#patienceText').textContent = `${Math.max(0, Math.ceil(state.patience))}%`;
+      }
+      function showToast(text) { const t=$('#toast'); t.textContent=text; t.classList.add('show'); clearTimeout(showToast.timer); showToast.timer=setTimeout(()=>t.classList.remove('show'),1650); }
+      function setCustomer() {
+        state.customerIndex = (state.customerIndex + 1) % customerLooks.length;
+        const [skin, hair, shirt] = customerLooks[state.customerIndex];
+        const c=$('#customer'); c.style.setProperty('--skin',skin); c.style.setProperty('--hair',hair); c.style.setProperty('--shirt',shirt); c.classList.remove('leaving');
+        state.order = makeOrder(); state.patience = Math.min(100, 83 + state.streak*3); $('#orderBubble').textContent=ticketText(state.order); resetBuild(); updateHud();
+      }
+      function sameOrder() { return menu.every(item => state.order[item] === state.build[item]); }
+      function serve() {
+        if (!state.playing) return;
+        if (sameOrder()) {
+          state.streak += 1;
+          const earned = 68 + Math.min(40, state.streak*8) + Math.ceil(state.patience/10);
+          state.cash += earned;
+          showToast(`Perfect ticket! +$${earned}`);
+          if (state.cash >= 620) return endShift(true);
+          setTimeout(setCustomer, 400);
+          $('#customer').classList.add('leaving');
+        } else {
+          state.streak = 0; state.patience -= 30; showToast('That wrap misses the ticket! −30 patience'); updateHud();
+          if (state.patience <= 0) setTimeout(() => { state.cash=Math.max(0,state.cash-55); showToast('Customer walked. −$55'); setCustomer(); }, 450);
+        }
+      }
+      function catEvent() {
+        if (!state.playing || state.ended || $('#catAlert').classList.contains('show')) return;
+        $('#catAlert').classList.add('show');
+        state.catTimer = setTimeout(() => {
+          if (!$('#catAlert').classList.contains('show')) return;
+          $('#catAlert').classList.remove('show'); state.build.fries = Math.max(0,state.build.fries-2); updateTray(); showToast('The cat stole two fries!');
+        }, 3500);
+      }
+      function startShift() {
+        state.cash=0; state.streak=0; state.time=90; state.patience=100; state.playing=true; state.ended=false; state.customerIndex=-1;
+        $('#modalBackdrop').classList.remove('show'); setCustomer(); clearInterval(state.clock);
+        state.clock=setInterval(() => {
+          state.time -= 1; state.patience -= .9 + Math.min(1.5,state.streak*.14); updateHud();
+          if (state.patience <= 0) { state.cash=Math.max(0,state.cash-55); showToast('Customer walked. −$55'); setCustomer(); }
+          if (state.time <= 0) endShift(false);
+        },1000);
+      }
+      function endShift(won) {
+        if (state.ended) return;
+        state.ended=true; state.playing=false; clearInterval(state.clock); clearTimeout(state.catTimer); $('#catAlert').classList.remove('show');
+        $('#modalTitle').textContent = won ? 'Counter legend!' : 'Shift complete';
+        $('#modalCopy').innerHTML = won ? `<p class="result">You reached $${state.cash} and kept the night crowd happy.</p><p>Your best run ended at a <strong>×${state.streak}</strong> streak. The city will remember this counter.</p>` : `<p class="result">You closed with $${state.cash} of the $620 goal.</p><p>Try keeping the ticket exact and serving quickly to preserve customer patience.</p>`;
+        $('#modalButton').textContent='Run another shift'; $('#modalBackdrop').classList.add('show');
+      }
+      $('#ingredientGrid').addEventListener('click', (event) => {
+        const button=event.target.closest('.ingredient'); if (!button || !state.playing) return;
+        const item=button.dataset.item;
+        if (item === 'falafel' || item === 'fries') state.build[item] = state.build[item] >= 6 ? 0 : state.build[item] + 1;
+        else state.build[item] = !state.build[item];
+        updateTray();
+      });
+      $('#serveButton').addEventListener('click',serve);
+      $('#resetButton').addEventListener('click',() => { if(state.playing) { resetBuild(); showToast('Tray cleared.'); } });
+      $('#shooButton').addEventListener('click',() => { clearTimeout(state.catTimer); $('#catAlert').classList.remove('show'); state.cash+=18; updateHud(); showToast('Cat shooed! +$18 luck tip'); });
+      $('#howButton').addEventListener('click',()=> { if(state.playing) { $('#modalTitle').textContent='How to play'; $('#modalCopy').innerHTML='Read each ticket, tap ingredients to build exactly that order, then serve. Correct tickets earn cash and a streak. Wrong wraps cost patience. Save the fries if a street cat appears.'; $('#modalButton').textContent='Resume shift'; $('#modalBackdrop').classList.add('show'); } });
+      $('#modalButton').addEventListener('click',()=> { if(state.playing && !state.ended) $('#modalBackdrop').classList.remove('show'); else startShift(); });
+      setInterval(()=> { if (state.playing && Math.random() < .40) catEvent(); }, 9500);
+      updateHud(); updateTray(); $('#modalBackdrop').classList.add('show');
+    })();
+  </script>
+</body>
+</html>
